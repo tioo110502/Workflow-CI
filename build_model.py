@@ -17,5 +17,5 @@ X_train_vec = vectorizer.fit_transform(X_train)
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train_vec, y_train)
 
-mlflow.sklearn.save_model(model, "./model_lokal")
-print("Model saved to ./model_lokal")
+mlflow.sklearn.save_model(model, "./local_model")
+print("Model saved to ./local_model")
