@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
 df = pd.read_csv("MLProject/Analisis_sentimen_timnas_STY_cleaned.csv")
-X = df[df.columns[0]]
+X = df[df.columns[0]].astype(str) 
 y = df[df.columns[-1]]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
