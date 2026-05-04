@@ -33,7 +33,7 @@ jobs:
 
       - name: Set MLflow Tracking URI
         run: |
-          echo "MLFLOW_TRACKING_URI=https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/Eksperimen_SML_Hafiz-Satria.mlflow" >> $GITHUB_ENV
+           echo "MLFLOW_TRACKING_URI=https://dagshub.com/tioo110502/Eksperimen_SML_Hafiz-Satria.mlflow" >> $GITHUB_ENV
 
       - name: Run mlflow project
         env:
