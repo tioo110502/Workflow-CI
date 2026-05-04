@@ -1,0 +1,100 @@
+name: MLflow CI CD Advanced
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  mlops:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up job
+        run: echo "Starting Skilled Pipeline for Adinda"
+
+      - name: Run actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+
+      - name: Check Env
+        run: |
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install mlflow dagshub pandas scikit-learn matplotlib
+
+      - name: Set MLflow Tracking URI
+        run: |
+          echo "MLFLOW_TRACKING_URI=https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/Eksperimen_SML_Hafiz-Satria.mlflow" >> $GITHUB_ENV
+
+      - name: Run mlflow project
+        env:
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+          MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+        run: |
+          cd MLProject
+          sed -i 's|mlflow.set_tracking_uri("https://dagshub.com/tioo110502/Eksperimen_SML_Hafiz-Satria.mlflow")|mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])|g' modelling.py
+          sed -i 's|mlflow.set_experiment("Latihan_Model_Basic")|mlflow.set_experiment("Basic_Model")|g' modelling.py
+          sed -i '1s/^/import os\n/' modelling.py
+          mlflow run . --env-manager=local --experiment-name "Basic_Model"
+
+      - name: Get latest MLflow run_id
+        env:
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+          MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+        run: |
+          sleep 10
+          RUN_ID=$(python -c "
+          import mlflow, os
+          mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI'])
+          runs = mlflow.search_runs(experiment_names=['Basic_Model'])
+          print(runs.sort_values('start_time', ascending=False).iloc[0].run_id)
+          ")
+          echo "RUN_ID=$RUN_ID"
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          mlflow artifacts download --run-id "$RUN_ID" --dst-path ./outputs
+          echo "=== Isi outputs ==="
+          find ./outputs -type f
+
+      - name: Install Python dependencies
+        run: echo "Verifying artifacts for GitHub Upload..."
+
+      - name: Upload to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: MLflow-Results-Hafiz
+          path: ./outputs
+          retention-days: 7
+
+      - name: Build Docker Model
+        run: |
+          python build_model.py
+          find ./local_model -type f
+          mlflow models build-docker -m "./local_model" -n sentiment-model --enable-mlserver
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Tag Docker Image
+        run: |
+          docker tag sentiment-model ${{ secrets.DOCKER_USERNAME }}/sentiment-model:latest
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/sentiment-model:latest
+
+      - name: Complete job
+        run: echo "Advanced Pipeline Finished Successfully"
