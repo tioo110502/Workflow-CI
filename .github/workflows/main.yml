@@ -80,6 +80,7 @@ jobs:
         run: |
           python build_model.py
           find ./local_model -type f
+          models build-docker -m "./local_model" -n sentiment-model --enable-mlserver || \
           mlflow models build-docker -m "./local_model" -n sentiment-model --enable-mlserver
 
       - name: Log in to Docker Hub
