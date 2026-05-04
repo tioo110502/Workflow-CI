@@ -15,7 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 import dagshub
-dagshub.init(repo_owner='tioo110502', repo_name='Eksperimen_SML_Hafiz-Satria', mlflow=True)
+
 
 # 1. MLflow Setup
 mlflow.set_tracking_uri("https://dagshub.com/tioo110502/Eksperimen_SML_Hafiz-Satria.mlflow")
