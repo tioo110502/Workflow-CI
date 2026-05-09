@@ -32,26 +32,40 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-vectorizer = TfidfVectorizer()
-X_train_vec = vectorizer.fit_transform(X_train)
-X_test_vec = vectorizer.transform(X_test)
+# Pipeline
+model = Pipeline([
+    ("tfidf", TfidfVectorizer()),
+    ("model", LogisticRegression(max_iter=1000))
+])
 
-# 4. Model Training & Logging
+# MLflow autolog
 mlflow.sklearn.autolog()
 
 with mlflow.start_run(run_name="LogReg_Basic_Local"):
-    model = LogisticRegression(max_iter=1000)
-    model.fit(X_train_vec, y_train)
-    
-    # 5. Membuat dan menyimpan file PNG
-    cm = confusion_matrix(y_test, model.predict(X_test_vec))
+
+    # Training
+    model.fit(X_train, y_train)
+
+    # Prediksi
+    y_pred = model.predict(X_test)
+
+    # Confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
+
     plt.title("Sentiment Model Prediction")
+
     plt.savefig("sentiment_model_plot.png")
-    
-    # Log artifact 
+
+    # Log artifact
     mlflow.log_artifact("sentiment_model_plot.png")
-    
-    # Simpan model 
-    mlflow.sklearn.log_model(model, "sentiment_model")
+
+    # Simpan pipeline lengkap
+    mlflow.sklearn.log_model(
+        model,
+        "sentiment_model"
+    )
+
+print("model berhasil disimpan!")
