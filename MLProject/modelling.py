@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import mlflow
 import mlflow.sklearn
+from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
